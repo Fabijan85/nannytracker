@@ -30,6 +30,9 @@
     // Initialize Firestore and attach it to the global window object
     window.db = firebase.firestore();
 
+    // Initialize a global variable for the hourly rate (default value)
+    window.currentHourlyRate = 16.50;
+
     // Set up a real-time listener on the setup document to update the hourly rate
     window.db.collection("setup").doc("setupDoc").onSnapshot(doc => {
       if (doc.exists) {
