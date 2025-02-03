@@ -8,13 +8,13 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <!-- flatpickr CSS for calendar view -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-
+  
   <!-- Firebase SDKs using compat libraries (loaded as normal scripts) -->
   <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-analytics-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore-compat.js"></script>
   <script>
-    // Your Firebase configuration (update if necessary)
+    // Your Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAWmeHfDigZuPpLLy2Fzvsav-3rRWk7ScI",
       authDomain: "nanny-hour-tracker.firebaseapp.com",
@@ -27,20 +27,23 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
-    // Initialize Firestore and attach it to window.db
+    // Initialize Firestore and attach it to the global window object
     window.db = firebase.firestore();
 
-    // Global variable for current hourly rate (default value)
+    // Initialize a global variable for the hourly rate (default value)
     window.currentHourlyRate = 16.50;
 
     // Set up a real-time listener on the setup document to update the hourly rate
     window.db.collection("setup").doc("setupDoc").onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
-        if (data.hourlyRate) {
+        if (data.hourlyRate !== undefined) {
           window.currentHourlyRate = data.hourlyRate;
-          // Update display
-          document.getElementById("hourlyRateDisplay").textContent = "Current Hourly Rate: £" + window.currentHourlyRate.toFixed(2);
+          // Update the display if the element exists (it may not exist until after DOM load)
+          const displayEl = document.getElementById("hourlyRateDisplay");
+          if (displayEl) {
+            displayEl.textContent = "Current Hourly Rate: £" + window.currentHourlyRate.toFixed(2);
+          }
         }
       } else {
         console.log("No setup document found.");
@@ -62,26 +65,19 @@
     .table-responsive { overflow-x: auto; }
     /* Login overlay styles */
     #loginOverlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       z-index: 9999;
     }
     #loginOverlay .login-box {
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      text-align: center;
-      max-width: 300px;
-      width: 100%;
+      background: #fff; padding: 30px; border-radius: 8px; text-align: center;
+      max-width: 300px; width: 100%;
     }
   </style>
 </head>
 <body>
-  <!-- Login Overlay -->
+  <!-- Login Overlay for Nanny Page -->
   <div id="loginOverlay">
     <div class="login-box">
       <h3>Please Enter Passcode</h3>
@@ -92,10 +88,10 @@
     </div>
   </div>
 
-  <!-- Main Content -->
+  <!-- Main Content (hidden until login succeeds) -->
   <div class="container" id="pageContent" style="display:none;">
     <h1>Noah Hours Tracked – Nanny View</h1>
-    <!-- Hourly Rate Display (will update in real time) -->
+    <!-- Hourly Rate Display -->
     <div class="mb-3">
       <p id="hourlyRateDisplay">Current Hourly Rate: £16.50</p>
     </div>
@@ -140,7 +136,7 @@
             </tr>
           </thead>
           <tbody>
-            <!-- Entries will be added here -->
+            <!-- Entries will appear here -->
           </tbody>
         </table>
       </div>
@@ -151,9 +147,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <!-- Inline Script for Nanny Functionality -->
+  <!-- Inline Script for Nanny Page Functionality -->
   <script>
-    // Login functionality for Nanny
+    // Nanny login functionality
     document.getElementById("nannyLoginBtn").addEventListener("click", function () {
       const passcode = document.getElementById("nannyPasscode").value;
       if (passcode === "Narwan1!") {
@@ -169,7 +165,7 @@
       document.getElementById("pageContent").style.display = "block";
     }
 
-    // Populate time dropdowns with 15-minute intervals
+    // Populate time dropdowns
     function populateTimeDropdown(selectElement) {
       selectElement.innerHTML = "";
       for (let hour = 0; hour < 24; hour++) {
@@ -185,7 +181,6 @@
       }
     }
 
-    // Calculate hours worked between timeIn and timeOut
     function calculateHours(timeIn, timeOut) {
       const [inHour, inMinute] = timeIn.split(":").map(Number);
       const [outHour, outMinute] = timeOut.split(":").map(Number);
@@ -195,7 +190,6 @@
       return (outTotal - inTotal) / 60;
     }
 
-    // Handle entry form submission: add a new entry to Firestore
     document.getElementById("entryForm").addEventListener("submit", function (event) {
       event.preventDefault();
       const date = document.getElementById("entryDate").value;
@@ -209,7 +203,7 @@
         timeIn: timeIn,
         timeOut: timeOut,
         hoursWorked: hoursWorked,
-        hourlyRate: currentHourlyRate,
+        hourlyRate: window.currentHourlyRate, // use the dynamic value
         expenses: expenses,
         paidStatus: "Unpaid"
       })
@@ -220,7 +214,6 @@
       .catch(error => console.error("Error adding entry: ", error));
     });
 
-    // Real-time listener to load entries from Firestore
     function loadEntries() {
       window.db.collection("entries").orderBy("date", "desc").onSnapshot(snapshot => {
         let entries = [];
@@ -233,7 +226,6 @@
       });
     }
 
-    // Update the entries table in the DOM
     function updateEntriesTable(entries) {
       const tbody = document.querySelector("#entriesTable tbody");
       tbody.innerHTML = "";

@@ -39,7 +39,8 @@
     .table-responsive { overflow-x: auto; }
     .summary-card { margin-bottom: 20px; }
     #loginOverlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       display: flex;
       align-items: center;
@@ -76,7 +77,7 @@
     </div>
     <h1>Noah Hours Tracked – Parent View</h1>
     
-    <!-- Setup Section (updates only the nanny name and hourly rate) -->
+    <!-- Setup Section (updates both nanny name and hourly rate) -->
     <div class="form-section">
       <h3>Setup</h3>
       <form id="setupForm">
@@ -84,7 +85,7 @@
           <label for="nannyName" class="form-label">Nanny Name</label>
           <input type="text" class="form-control" id="nannyName" placeholder="Enter nanny's name" required />
         </div>
-        <!-- Hourly rate field is now editable -->
+        <!-- Hourly Rate Field (editable) -->
         <div class="mb-3">
           <label for="hourlyRateInput" class="form-label">Hourly Rate (£)</label>
           <input type="number" step="0.01" class="form-control" id="hourlyRateInput" placeholder="Enter hourly rate" required />
@@ -144,10 +145,10 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+  
   <!-- Inline Script for Parent Page Functionality -->
   <script>
-    let currentHourlyRate = 16.50; // default value
+    let currentHourlyRate = 16.50; // default
     let nannyName = "";
     let entries = [];
 
@@ -167,7 +168,6 @@
       document.getElementById("pageContent").style.display = "block";
     }
 
-    // Load setup data from Firestore
     function loadSetup() {
       window.db.collection("setup").doc("setup").get()
       .then(doc => {
@@ -184,12 +184,11 @@
       .catch(error => console.error("Error loading setup: ", error));
     }
 
-    // Handle setup form submission: update nanny name and hourly rate
     document.getElementById("setupForm").addEventListener("submit", function (event) {
       event.preventDefault();
       const newNannyName = document.getElementById("nannyName").value;
       const newHourlyRate = parseFloat(document.getElementById("hourlyRateInput").value) || 16.50;
-      currentHourlyRate = newHourlyRate; // update the global variable
+      currentHourlyRate = newHourlyRate;
       window.db.collection("setup").doc("setup").set({
         nannyName: newNannyName,
         hourlyRate: newHourlyRate
@@ -198,7 +197,6 @@
       .catch(error => console.error("Error updating setup: ", error));
     });
 
-    // Real-time listener to load entries from Firestore
     function loadEntries() {
       window.db.collection("entries").orderBy("date", "desc").onSnapshot(snapshot => {
         const entries = [];
