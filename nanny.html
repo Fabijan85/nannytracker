@@ -34,7 +34,7 @@
     window.currentHourlyRate = 16.50;
 
     // Set up a real-time listener on the setup document to update the hourly rate
-    window.db.collection("setup").doc("setupDoc").onSnapshot(doc => {
+    window.db.collection("setup").doc("setup").onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
         if (data.hourlyRate !== undefined) {
