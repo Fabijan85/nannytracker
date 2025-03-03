@@ -13,6 +13,8 @@
   <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-analytics-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore-compat.js"></script>
+  <!-- NEW: Firebase Auth compat -->
+  <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-auth-compat.js"></script>
   <script>
     // Your Firebase configuration
     const firebaseConfig = {
@@ -24,6 +26,7 @@
       appId: "1:593559014075:web:c5fdebf20c66c00a31b79e",
       measurementId: "G-SEM1JEW8XP"
     };
+
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
@@ -34,12 +37,13 @@
     window.currentHourlyRate = 16.50;
 
     // Set up a real-time listener on the setup document to update the hourly rate
+    // (Change "setup" to "setupDoc" if your doc ID is "setupDoc")
     window.db.collection("setup").doc("setup").onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
         if (data.hourlyRate !== undefined) {
           window.currentHourlyRate = data.hourlyRate;
-          // Update the display if the element exists (it may not exist until after DOM load)
+          // Update the display if the element exists
           const displayEl = document.getElementById("hourlyRateDisplay");
           if (displayEl) {
             displayEl.textContent = "Current Hourly Rate: £" + window.currentHourlyRate.toFixed(2);
@@ -49,6 +53,16 @@
         console.log("No setup document found.");
       }
     });
+
+    // NEW: Anonymous Authentication
+    // Automatically sign the user in anonymously on page load
+    firebase.auth().signInAnonymously()
+      .then(() => {
+        console.log("Signed in anonymously");
+      })
+      .catch((error) => {
+        console.error("Anonymous sign-in failed:", error);
+      });
   </script>
 
   <style>
@@ -71,8 +85,12 @@
       z-index: 9999;
     }
     #loginOverlay .login-box {
-      background: #fff; padding: 30px; border-radius: 8px; text-align: center;
-      max-width: 300px; width: 100%;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 300px;
+      width: 100%;
     }
   </style>
 </head>
@@ -118,6 +136,7 @@
         <button type="submit" class="btn btn-success">Add Entry</button>
       </form>
     </div>
+
     <!-- Entries Table -->
     <div class="form-section">
       <h3>Entries</h3>
@@ -165,7 +184,7 @@
       document.getElementById("pageContent").style.display = "block";
     }
 
-    // Populate time dropdowns
+    // Populate time dropdowns with 15-minute intervals
     function populateTimeDropdown(selectElement) {
       selectElement.innerHTML = "";
       for (let hour = 0; hour < 24; hour++) {
@@ -203,7 +222,7 @@
         timeIn: timeIn,
         timeOut: timeOut,
         hoursWorked: hoursWorked,
-        hourlyRate: window.currentHourlyRate, // use the dynamic value
+        hourlyRate: window.currentHourlyRate, // use the dynamic value from Firestore
         expenses: expenses,
         paidStatus: "Unpaid"
       })
